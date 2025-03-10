@@ -72,18 +72,6 @@ for r_idx in range(n_radi):
     cot_vel_diff[r_idx, :, :] = cot_vel_err - em_vel_err
     ot_vel_diff[r_idx, :, :] = ot_vel_err - em_vel_err
 
-# fig, ax = plt.subplots(figsize=(8, 6))
-# sns.kdeplot(cot_poi_diff.reshape(-1), label='COT - EM')
-# sns.kdeplot(ot_poi_diff.reshape(-1), label='OT - EM')
-# ax.set_xlim(-8, 5)
-# # # plt.xlabel('Steps', fontsize=16)
-# # # plt.ylabel('Velocity errors difference', fontsize=16)
-# # # plt.tick_params(axis = 'both', which = 'major', labelsize = 16)
-# plt.legend(bbox_to_anchor=(1, 1), title='', fontsize=16, title_fontsize=16)
-# # # plt.savefig('vel_diff.pdf', format='pdf', dpi=1000, bbox_inches='tight', pad_inches=0.1)
-# plt.show()
-
-
 ############# Position error ##############
 errdf = []
 total_n = n_radi*n_ins*n_step
@@ -98,10 +86,7 @@ ax.set_xlim(-10, 6)
 plt.xlabel('Difference', fontsize=14)
 plt.ylabel('Proportion', fontsize=14)
 plt.tick_params(axis = 'both', which = 'major', labelsize = 14)
-# plt.rcParams['title_fontsize'] = 16
-# plt.rcParams['fontsize'] = 16
-# ax.legend(bbox_to_anchor=(0.1, 1), title='Algorithm', fontsize=16, title_fontsize=16)
-# plt.show()
+
 plt.savefig('poi_diff.pdf', format='pdf', dpi=1000, bbox_inches='tight', pad_inches=0.1)
 
 COTPoi_mean = np.mean(cot_poi_diff, axis=(1, 2))
@@ -129,10 +114,7 @@ ax.set_xlim(-10, 6)
 plt.xlabel('Difference', fontsize=14)
 plt.ylabel('Proportion', fontsize=14)
 plt.tick_params(axis = 'both', which = 'major', labelsize = 14)
-# plt.rcParams['title_fontsize'] = 16
-# plt.rcParams['fontsize'] = 16
-# ax.legend(bbox_to_anchor=(0.1, 1), title='Algorithm', fontsize=16, title_fontsize=16)
-# plt.show()
+
 plt.savefig('vel_diff.pdf', format='pdf', dpi=1000, bbox_inches='tight', pad_inches=0.1)
 
 

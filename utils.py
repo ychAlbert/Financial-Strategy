@@ -277,3 +277,48 @@ def KL_pred(n_dim, radius, A, Bp, C, Dp, Sigp, current_obs, pred_mean):
     update_cov = L @ np.linalg.inv(np.eye(n_dim) - th * L.T @ L) @ L.T
 
     return update_mean, update_cov
+
+
+def DL_optimize(m_dim, n_dim, radius, A, Bp, C, Dp, Sigp, current_obs, pred_mean, maxit=20, algo='DL'):
+    """
+    使用深度学习方法优化卡尔曼滤波
+    
+    Args:
+        m_dim: 观测维度
+        n_dim: 状态维度
+        radius: 鲁棒性半径
+        A: 状态转移矩阵
+        Bp: 参考模型的过程噪声协方差
+        C: 观测矩阵
+        Dp: 参考模型的观测噪声协方差
+        Sigp: 参考模型的状态协方差
+        current_obs: 当前观测
+        pred_mean: 预测均值
+        maxit: 最大迭代次数（对于传统方法）
+        algo: 算法类型（'DL', 'DL_KL', 'DL_OT', 'DL_BCOT'）
+    
+    Returns:
+        update_mean: 更新后的状态均值
+        update_cov: 更新后的状态协方差
+    """
+    try:
+        # 尝试导入深度学习模块
+        from dl_utils import dl_optimize
+        
+        # 使用深度学习模型进行优化
+        model_path = f"./models/dl_kalman_{algo}.pt"
+        return dl_optimize(m_dim, n_dim, radius, A, Bp, C, Dp, Sigp, current_obs, pred_mean, model_path, algo)
+    except (ImportError, FileNotFoundError) as e:
+        # 如果模块不存在或模型不存在，回退到传统方法
+        print(f"深度学习模型加载失败: {e}，使用传统方法替代")
+        
+        # 根据算法类型选择传统方法
+        if algo == 'DL' or algo == 'DL_BCOT':
+            return optimize(m_dim, n_dim, radius, A, Bp, C, Dp, Sigp, current_obs, pred_mean, maxit, 'BCOT')
+        elif algo == 'DL_KL':
+            return optimize(m_dim, n_dim, radius, A, Bp, C, Dp, Sigp, current_obs, pred_mean, min(2, maxit), 'KL')
+        elif algo == 'DL_OT':
+            return optimize(m_dim, n_dim, radius, A, Bp, C, Dp, Sigp, current_obs, pred_mean, maxit, 'OT')
+        else:
+            # 默认使用BCOT
+            return optimize(m_dim, n_dim, radius, A, Bp, C, Dp, Sigp, current_obs, pred_mean, maxit, 'BCOT')

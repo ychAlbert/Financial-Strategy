@@ -18,7 +18,7 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-ALGO_FLAG = 'KL'
+ALGO_FLAG = 'OT'
 
 if ALGO_FLAG == 'BCOT':
     log_initial = 'BCOT_track_radi'
@@ -32,7 +32,6 @@ if ALGO_FLAG == 'KL':
     MaxIter = 2       # KL in this implementation is easy to diverge, MaxIter = 2 is the best choice
 else:
     MaxIter = 20
-
 start = time.time()
 np.random.seed(12345)
 # pre-training data length
@@ -44,8 +43,8 @@ step_num = 100
 
 search_num = 8
 
-radi_arr = np.array([0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0])
-
+#radi_arr = np.array([0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0])
+radi_arr = np.array([4.0])
 # obs dimension
 m_dim = 2
 # state dimension
@@ -112,12 +111,12 @@ for r_idx in range(search_num):
 
         #####################################################
         MSE = np.sum((EM_pre_est[:, :2] - pretrain_unobs_state[:, :2]) ** 2, axis=1).mean()
-        print('EM in-sample RMSE of position errors is', np.sqrt(MSE))
+        print('EM样本内位置误差RMSE为', np.sqrt(MSE))
 
         MSE = np.sum((EM_pre_est[:, 2:] - pretrain_unobs_state[:, 2:]) ** 2, axis=1).mean()
-        print('EM in-sample RMSE of velocity errors is', np.sqrt(MSE))
+        print('EM样本内速度误差RMSE为', np.sqrt(MSE))
 
-        ########### Out-of-sample testing ###############
+        ########### 样本外测试 ###############
         unobs_state, obs = simulator(step_num)
 
         kf_out = KalmanFilter(transition_matrices=A, observation_matrices=C,
@@ -129,11 +128,11 @@ for r_idx in range(search_num):
 
         #####################################################
         EM_poi_err[ins, :] = np.sum((EM_est[:, :2] - unobs_state[:, :2]) ** 2, axis=1)
-        print(bcolors.PINK + 'EM out-of-sample RMSE of position errors is',
+        print(bcolors.PINK + 'EM样本外位置误差RMSE为',
               np.sqrt(EM_poi_err[ins, :].mean()), bcolors.ENDC)
 
         EM_vel_err[ins, :] = np.sum((EM_est[:, 2:] - unobs_state[:, 2:]) ** 2, axis=1)
-        print(bcolors.PINK + 'EM out-of-sample RMSE of velocity errors is',
+        print(bcolors.PINK + 'EM样本外速度误差RMSE为',
               np.sqrt(EM_vel_err[ins, :].mean()), bcolors.ENDC)
 
         est_state = np.zeros((step_num, n_dim))
@@ -154,20 +153,11 @@ for r_idx in range(search_num):
             poi_err[ins, step] = np.sum((unobs_state[step, :2] - est_state[step, :2])**2)
             vel_err[ins, step] = np.sum((unobs_state[step, 2:] - est_state[step, 2:])**2)
 
-            # if step % 100 == 0:
-            #     print(step, np.sum(np.abs(obs[step, :])), np.sum(np.abs(next_mean)),
-            #           np.linalg.det(next_cov), np.linalg.det(filtered_state_covariances[step, :, :]))
-            #     print('Estimated Covariance', next_cov)
-            #     print('Filtered Covariance', filtered_state_covariances[step, :, :])
-
-        # print('Mean dB', dB.mean())
-        # print(np.divide(np.sum(np.abs(unobs_state - est_state), axis=1), np.sum(np.abs(unobs_state), axis=1)))
-
         MSE = np.sum((est_state[:, :2] - unobs_state[:, :2])**2, axis=1).mean()
-        print(bcolors.GREEN + 'Algo position errors is', np.sqrt(MSE), bcolors.ENDC)
+        print(bcolors.GREEN + '算法位置误差为', np.sqrt(MSE), bcolors.ENDC)
 
         MSE = np.sum((est_state[:, 2:] - unobs_state[:, 2:])**2, axis=1).mean()
-        print(bcolors.GREEN + 'Algo velocity errors is', np.sqrt(MSE), bcolors.ENDC)
+        print(bcolors.GREEN + '算法速度误差为', np.sqrt(MSE), bcolors.ENDC)
 
         obs_hist.append(obs.copy())
         unobs_hist.append(unobs_state.copy())
@@ -175,7 +165,7 @@ for r_idx in range(search_num):
         algo_est_hist.append(est_state.copy())
 
         end = time.time()
-        print('Time elapsed', end - start)
+        print('耗时', end - start)
 
 
     log_dir = "./logs/{}_{}".format(log_initial, radius)
@@ -199,15 +189,3 @@ for r_idx in range(search_num):
 
     with open('{}/EM_est.pickle'.format(log_dir), 'wb') as fp:
         pickle.dump(EM_est_hist, fp)
-
-    # with open('{}/poi.pickle'.format(log_dir), 'wb') as fp:
-    #     pickle.dump(poi_err, fp)
-    #
-    # with open('{}/vel.pickle'.format(log_dir), 'wb') as fp:
-    #     pickle.dump(vel_err, fp)
-    #
-    # with open('{}/EM_poi.pickle'.format(log_dir), 'wb') as fp:
-    #     pickle.dump(EM_poi_err, fp)
-    #
-    # with open('{}/EM_vel.pickle'.format(log_dir), 'wb') as fp:
-    #     pickle.dump(EM_vel_err, fp)
